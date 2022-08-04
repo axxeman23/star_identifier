@@ -1,0 +1,11 @@
+name: Star Identifier
+description: Download a video with youtube-dl
+version: 0.1
+url: https://github.com/axxeman23/star_identifier
+exec:
+  - python
+  - "{pluginDir}/py_plugins/star_identifier.py"
+interface: raw
+tasks:
+  - name: Hello World
+    description: Says hello world
