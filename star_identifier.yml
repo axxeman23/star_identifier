@@ -7,5 +7,11 @@ exec:
   - "{pluginDir}/py_plugins/star_identifier.py"
 interface: raw
 tasks:
-  - name: Hello World
-    description: Says hello world
+  - name: Export Performers
+    description: Export current performer images to be able to compare tagged images.
+    defaultArgs:
+      mode: export_known
+  - name: Run Facial Recognition
+    description: Compare tagged images to exported performers.
+    defaultArgs:
+      mode: identify

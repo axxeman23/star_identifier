@@ -1,3 +1,7 @@
+star-identifier-performers
+star-identifier-performers/
+py_plugins/debug.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
