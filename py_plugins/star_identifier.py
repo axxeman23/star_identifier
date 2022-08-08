@@ -3,20 +3,18 @@ import sys
 import os
 import pathlib
 import log
-import glob
 import urllib.request
-import threading
-from queue import Queue
+import face_recognition
+import numpy as np
 from identifier_stash_interface import IdentifierStashInterface
 
 current_path = str(pathlib.Path(__file__).parent.absolute())
-performer_export_folder = str(pathlib.Path(current_path + '/../star-identifier-performers/').absolute())
+encoding_export_folder = str(pathlib.Path(current_path + '/../star-identifier-encodings/').absolute())
 
-IMAGE_TYPES = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp'
-}
+encodings_path = os.path.join(encoding_export_folder, 'star-identifier-encodings.npz')
+errors_path = os.path.join(encoding_export_folder, 'errors.json')
+
+tag_name = "star identifier"
 
 def main():
   json_input = readJSONInput()
@@ -28,10 +26,21 @@ def main():
   out = json.dumps(output)
   print(out + "\n")
 
-
 def readJSONInput():
   json_input = sys.stdin.read()
   return json.loads(json_input)
+
+def jsonPrint(input, path):
+  os.makedirs(encoding_export_folder, exist_ok=True)
+  f = open(path, 'w')
+  json.dump(input, f)
+  f.close()
+
+def jsonRead(path):
+  f = open(path, 'w')
+  data = json.load(f)
+  f.close()
+  return data
 
 def _debugPrint(input):
   f = open(os.path.join(current_path, 'debug.txt'), 'w')
@@ -48,10 +57,11 @@ def run(json_input):
   elif mode_arg == "export_known":
     exportKnown(client)
 
-def identify(client):
-  client
+#
+# export function
+#
 
-def exportKnown(client, nmb_threads=8):
+def exportKnown(client):
   log.LogInfo('Getting all performer images...')
   
   performers = client.getPerformerImages()
@@ -63,89 +73,48 @@ def exportKnown(client, nmb_threads=8):
     log.LogError('No performers found.')
     return
 
-  os.makedirs(performer_export_folder, exist_ok=True)
+  os.makedirs(encoding_export_folder, exist_ok=True)
 
-  performer = performers[0]
-
-  # res = urllib.request.urlopen(performer['image_path'])
-  # info = res.info()
-  # log.LogInfo(f"==> image info type: {info.get_content_type()}")
-  # ext = IMAGE_TYPES[res.info().get_content_type()]
-  # log.LogInfo(f"==> image ext: {ext}")
-  # path = os.path.join(performer_export_folder, f"{performer['name']}-{performer['id']}.{ext}")
-  # log.LogInfo(f"==> image ext: {path}")
-  
-  # with open(path, "wb") as f:
-  #   f.write(res.read())
-  
-
-  # nmb of finished performers
-  count = 0
-  # in the rare case that there are fewer threads than performers
-  nmb_threads = min(nmb_threads, total)
-  thread_lock = threading.Lock()
-  q = Queue(maxsize=0)
-
-  for performer in performers:
-      q.put(performer)
-
-  os.makedirs(performer_export_folder, exist_ok=True)
+  outputDict = {}
+  errorList = []
 
   log.LogInfo('Starting performer image export (this might take a while)')
-  
-  # Create threads and start them
-  for i in range(nmb_threads):
-      worker = threading.Thread(target=export_thread_function, name=f"Thread-{i}", args=(q, thread_lock, count, total, client))
-      worker.start()
 
-  # Wait for all threads to be finished
-  q.join()
-  log.LogInfo(f'Finished exporting all {total} performer images')
-  # _debugPrint(performers)
-
-def export_thread_function(q: Queue, thread_lock: threading.Lock, count: int, total: int, client: IdentifierStashInterface):
-  log.LogDebug(f"Created {threading.current_thread().name}")
-  while not q.empty():
-    performer = q.get()
-
-    filename = f"{performer['name']}%{performer['id']}"
-
-    # Check if the image exists, ignoring the extension
-    if not glob.glob(os.path.join(performer_export_folder, f"{filename}.*")):
-      res = urllib.request.urlopen(performer['image_path'])
-      ext = IMAGE_TYPES[res.info().get_content_type()]
-      path = os.path.join(performer_export_folder, f"{performer['name']}%{performer['id']}.{ext}")
-
-      with open(path, 'wb') as f:
-        f.write(res.read())
-    
-    thread_lock.acquire()
-    count += 1
+  for performer in performers:
     log.LogProgress(count / total)
-    thread_lock.release()
 
-    q.task_done()
+    image = face_recognition.load_image_file(urllib.request.urlopen(performer['image_path']))
+    try:
+      encoding = face_recognition.face_encodings(image)[0]
+      outputDict[performer['id']] = encoding
+    except IndexError:
+      log.LogInfo(f"No face found for {performer['name']}")
+      errorList.append(performer)
 
-  log.LogDebug(f"{threading.current_thread().name} finished")
-  return True
+    count += 1
 
-      
+  np.savez(encodings_path, **outputDict)
+  jsonPrint(errorList, errors_path)
 
-def get_scrape_tag(client):
-    tag_name = "star identifier"
-    tag_id = client.findTagIdWithName(tag_name)
-    if tag_id is not None:
-        return tag_id
-    else:
-        client.createTagWithName(tag_name)
-        tag_id = client.findTagIdWithName(tag_name)
-        return tag_id
+  log.LogInfo(f'Finished exporting all {total} performer images.')
+  log.LogInfo(f"Failed recognitions saved to {str(errors_path)}")
 
-def findImages(client):
-  log.LogInfo('Getting all images...')
-  images = client.findImages()
-  total = len(images)
-  log.LogInfo(f"Found {total} images")
+#
+# Facial recognition function
+#
+
+def identify(client):
+  log.LogInfo("Loading exported face encodings...")
+
+  ids = []
+  known_face_encodings = []
+  npz = np.load(encodings_path)
+  
+  for id in npz:
+    ids.append(id)
+    known_face_encodings.append(npz[id])
+
+  log.LogInfo(f"Getting images tagged with '${tag_name}'...")
 
   tag_id = get_scrape_tag(client)
   image_filter = {
@@ -154,11 +123,47 @@ def findImages(client):
 				"modifier": "INCLUDES_ALL"
 			}
 		}
+
   images = client.findImages(image_filter)
-  log.LogInfo(f"Found {len(images)} tagged images")
+  total = len(images)
+  
+  log.LogInfo(f"Found {total} tagged images")
 
-  _debugPrint(images[0])
+  log.LogInfo('Starting identification of tagged images (this might take a while)')
 
+  # for image in images:
+
+  unknown_face = face_recognition.load_image_file(images[0]['path'])
+
+  try:
+    unknown_face_encoding = face_recognition.face_encodings(unknown_face)[0]
+  except IndexError:
+      log.LogError(f"Face not found in tagged image id {images[0]['id']}")
+      return
+  
+  results = face_recognition.compare_faces(known_face_encodings, unknown_face_encoding)
+
+  try:
+    matching_performer_ids = [ids[i] for i in range(len(results)) if results[i] == True]
+
+    log.LogInfo(f"Identified match! Performer ids {matching_performer_ids}")
+    image_data = {
+      'id': images[0]['id'],
+      'performer_ids': matching_performer_ids
+    }
+    client.updateImage(image_data)
+  except IndexError:
+    log.LogError(f"No matching performer found for tagged image id {images[0]['id']}")
+
+
+def get_scrape_tag(client):
+  tag_id = client.findTagIdWithName(tag_name)
+  if tag_id is not None:
+    return tag_id
+  else:
+    client.createTagWithName(tag_name)
+    tag_id = client.findTagIdWithName(tag_name)
+    return tag_id
 
 main()
 

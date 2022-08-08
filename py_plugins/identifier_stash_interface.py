@@ -416,18 +416,8 @@ class IdentifierStashInterface:
                 count
                 images {
                     id
-                    title
-                    studio {
-                        id
-                    }
+                    path
                     performers {
-                        id
-                    }
-                    tags {
-                        id
-                    }
-                    rating
-                    galleries {
                         id
                     }
                 }

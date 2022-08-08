@@ -8,7 +8,7 @@ exec:
 interface: raw
 tasks:
   - name: Export Performers
-    description: Export current performer images to be able to compare tagged images.
+    description: Export current performer images and add them to an encoding file to be able to compare tagged images.
     defaultArgs:
       mode: export_known
   - name: Run Facial Recognition
