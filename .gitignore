@@ -1,6 +1,7 @@
 star-identifier-encodings
 star-identifier-encodings/
 py_plugins/debug.txt
+scratch.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

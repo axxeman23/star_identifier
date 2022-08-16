@@ -8,10 +8,18 @@ exec:
 interface: raw
 tasks:
   - name: Export Performers
-    description: Export current performer images and add them to an encoding file to be able to compare tagged images.
+    description: Run this first! Exports current performer images and adds them to an encoding file for recognition.
     defaultArgs:
       mode: export_known
-  - name: Run Facial Recognition
-    description: Compare tagged images to exported performers.
+  - name: Identify Images
+    description: Compares images tagged with 'star identifier' (by default) to exports, and adds all possible matches to the images.
     defaultArgs:
-      mode: identify
+      mode: identify_imgs
+  - name: Identify Scene Screenshots
+    description: Compares scene screenshots tagged with 'star identifier' (by default) to exports, and adds all possible matches to the scenes.
+    defaultArgs:
+      mode: identify_scene_screenshots
+  # - name: Debug
+  #   description: Debug func
+  #   defaultArgs:
+  #     mode: debug
