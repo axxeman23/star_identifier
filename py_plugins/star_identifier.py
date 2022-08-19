@@ -11,6 +11,7 @@ from concurrent.futures import ProcessPoolExecutor
 import urllib.request
 import face_recognition
 import numpy as np
+import imageio.v3 as iio
 
 # local
 import log
@@ -57,6 +58,8 @@ def run(json_input):
       identify_imgs(client, *load_encodings())
     case "identify_scene_screenshots":
       identify_scene_screenshots(client, *load_encodings())
+    case "identify_scene_frames":
+      identify_scene_frames(client, *load_encodings())
     case "debug":
       debug_func(client)
     case _:
@@ -304,7 +307,45 @@ def identify_scene_screenshots(client, ids, known_face_encodings):
     execution_args
     )
 
+<<<<<<< HEAD
   log.LogInfo("Scene screenshot identification complete!")
+=======
+def identify_scene_frames(client, ids, known_face_encodings):
+  log.LogInfo(f"Getting scenes tagged with '{config.tag_name_identify}'...")
+
+  scenes = client.getScenePaths(get_scrape_tag_filter(client))
+  count = 0
+  total = len(scenes)
+
+  if not total:
+    log.LogError(f"No tagged scenes found. Tag scenes with '{config.tag_name_identify}', then try again.")
+    return
+  
+  log.LogInfo(f"Found {total} tagged scenes. Starting identification. This might take awhile.")
+  
+  scene = scenes[0]
+  # for scene in scenes:
+  log.LogProgress(count / total)
+
+  matching_performer_ids = np.empty((0,0), int)
+  stream = scene['paths']['stream']
+
+  frames = iio.imread(stream, extension='.mp4')
+
+  total = len(frames)
+
+  # for idx, frame in [for idx in enumerate(iio.imiter(stream, extension='.mp4')) if idx % 5 == 0]:
+  #   if idx % 5 == 0:
+  #     try:
+  #       matching_performer_ids = np.append(matching_performer_ids, get_recognized_ids(frame, known_face_encodings, ids))
+  #     except Exception:
+  #       continue
+
+  # matching_performer_ids = np.unique(matching_performer_ids).tolist()
+
+  log.LogDebug(f"Found performers in scene id {scene['id']} : {matching_performer_ids}")
+
+>>>>>>> adding task
 
 if __name__ == "__main__":
   main()

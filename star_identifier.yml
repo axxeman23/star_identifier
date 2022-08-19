@@ -19,6 +19,10 @@ tasks:
     description: Compares scene screenshots tagged with 'star identifier' (by default) to exported performers, and adds all possible matches to the scenes.
     defaultArgs:
       mode: identify_scene_screenshots
+  - name: Identify Scene Frames
+    description: "Compares each frame of scenes tagged with 'star identifier' (by default) to exported performers, and adds all possible matches to the scenes. (Warning: slow)"
+    defaultArgs:
+      mode: identify_scene_frames
   # - name: Debug
   #   description: Debug func
   #   defaultArgs:
