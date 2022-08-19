@@ -73,4 +73,4 @@ This loads all images in the stash database tagged with `star identifier` (by de
 
 ### Identify Scene Screenshots
 
-This loads all scene screenshots in the stash database tagged with `star identifier` (by default), compares the recognized faces to the exported face database, and then adds all potential matches to those scenes as performers.
+This loads the screenshot for every scene in the stash database tagged with `star identifier` (by default), compares the recognized faces to the exported face database, and then adds all potential matches to those scenes as performers.
