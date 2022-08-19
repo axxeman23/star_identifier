@@ -1,6 +1,6 @@
 name: Star Identifier
 description: Download a video with youtube-dl
-version: 0.1
+version: 1.0
 url: https://github.com/axxeman23/star_identifier
 exec:
   - python
