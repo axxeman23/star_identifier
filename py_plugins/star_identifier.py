@@ -1,12 +1,18 @@
+# https://github.com/axxeman23/star_identifier
+
+# built-in
 import json
 import sys
 import os
 import pathlib
-import log
+
+# external
 import urllib.request
 import face_recognition
 import numpy as np
 
+# local
+import log
 import star_identifier_config as config
 from star_identifier_interface import IdentifierStashInterface
 
@@ -29,7 +35,11 @@ def main():
 
   output = {}
 
-  run(json_input)
+  try:
+    run(json_input)
+  except Exception as error:
+    log.LogError(str(error))
+    return
 
   out = json.dumps(output)
   print(out + "\n")
@@ -43,9 +53,9 @@ def run(json_input):
     case "export_known":
       export_known(client)
     case "identify_imgs":
-      identify_imgs(client)
+      identify_imgs(client, *load_encodings())
     case "identify_scene_screenshots":
-      identify_scenes(client)
+      identify_scene_screenshots(client, *load_encodings())
     case "debug":
       debug_func(client)
     case _:
@@ -64,12 +74,6 @@ def json_print(input, path):
   f = open(path, 'w')
   json.dump(input, f)
   f.close()
-
-# def json_read(path):
-#   f = open(path, 'w')
-#   data = json.load(f)
-#   f.close()
-#   return data
 
 def get_scrape_tag(client, tag_name):
   tag_id = client.findTagIdWithName(tag_name)
@@ -177,13 +181,13 @@ def export_known(client):
 
 
 def get_recognized_ids_from_path(image_path, known_face_encodings, ids):
-  return _get_recognized_ids(face_recognition.load_image_file(image_path), known_face_encodings, ids)
+  return get_recognized_ids(face_recognition.load_image_file(image_path), known_face_encodings, ids)
 
 def get_recognized_ids_from_url(image_url, known_face_encodings, ids):
   image = urllib.request.urlopen(image_url)
-  return _get_recognized_ids(face_recognition.load_image_file(image), known_face_encodings, ids)
+  return get_recognized_ids(face_recognition.load_image_file(image), known_face_encodings, ids)
 
-def _get_recognized_ids(image_file, known_face_encodings, ids):
+def get_recognized_ids(image_file, known_face_encodings, ids):
   unknown_face_encodings = face_recognition.face_encodings(image_file)
   
   recognized_ids = np.empty((0,0), int)
@@ -197,13 +201,7 @@ def _get_recognized_ids(image_file, known_face_encodings, ids):
 
 # Imgs
 
-def identify_imgs(client):
-  try: 
-    [ids, known_face_encodings] = load_encodings()
-  except Exception as error:
-    log.LogError(error)
-    return
-
+def identify_imgs(client, ids, known_face_encodings):
   log.LogInfo(f"Getting images tagged with '{config.tag_name_identify}'...")
 
   images = client.findImages(get_scrape_tag_filter(client))
@@ -243,16 +241,10 @@ def identify_imgs(client):
 
 # Scenes
 
-def identify_scenes(client):
-  try: 
-    [ids, known_face_encodings] = load_encodings()
-  except Exception as error:
-    log.LogError(error)
-    return
-  
+def identify_scene_screenshots(client, ids, known_face_encodings):  
   log.LogInfo(f"Getting scenes tagged with '{config.tag_name_identify}'...")
 
-  scenes = client.getSceneScreenshot(get_scrape_tag_filter(client))
+  scenes = client.getScenePaths(get_scrape_tag_filter(client))
   count = 0
   total = len(scenes)
 
@@ -266,19 +258,18 @@ def identify_scenes(client):
     log.LogProgress(count / total)
 
     matching_performer_ids = np.empty((0,0), int)
-    paths = scene['paths']
+    screenshot = scene['paths']['screenshot']
 
-    for path_name in paths:
-      try:
-        matches = get_recognized_ids_from_url(paths[path_name], known_face_encodings, ids)
-        log.LogInfo(f"{len(matches)} performers identified in scene id {scene['id']}'s {path_name}")
-        matching_performer_ids = np.append(matching_performer_ids, matches)
-      except IndexError:
-        log.LogError(f"No face found in {path_name} for scene id {scene['id']}. Moving on to next image...")
-        continue
-      except Exception as error:
-        log.LogError(f"Error type = {type(error).__name__} comparing {path_name} for scene id {scene['id']}. Moving on to next image...")
-        continue
+    try:
+      matches = get_recognized_ids_from_url(screenshot, known_face_encodings, ids)
+      log.LogInfo(f"{len(matches)} performers identified in scene id {scene['id']}'s screenshot")
+      matching_performer_ids = np.append(matching_performer_ids, matches)
+    except IndexError:
+      log.LogError(f"No face found in screenshot for scene id {scene['id']}. Moving on to next image...")
+      continue
+    except Exception as error:
+      log.LogError(f"Error type = {type(error).__name__} comparing screenshot for scene id {scene['id']}. Moving on to next image...")
+      continue
 
     matching_performer_ids = np.unique(matching_performer_ids).tolist()
 
@@ -287,6 +278,9 @@ def identify_scenes(client):
     client.addPerformersToScene(scene['id'], matching_performer_ids)
 
     count += 1
+  
+  log.LogInfo("Screenshot identification complete!")
+
 
 main()
 

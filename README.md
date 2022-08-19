@@ -1,5 +1,11 @@
 # Star Identifier
 
+https://github.com/axxeman23/star_identifier
+
+## Intro
+
+Star Identifier uses [facial recognition](https://github.com/ageitgey/face_recognition) to automatically identify who is in images or scene screenshots from the performers already in your [Stash](https://github.com/stashapp/stash) library.
+
 ## Requirements
 
 ### Python3
@@ -35,11 +41,12 @@ For more details, see the [Face Recognition installation instructions](https://g
 
 ### Plugin Files
 
-You'll need the following in your `plugins` folder from this repo:
+You'll need the following in your `plugins` folder from this repo. Copy `star_identifier.yml` to the `plugins` folder, and the rest of the files to a folder called `py_plugins` inside the `plugins` folder. If you already have `log.py` in `py_plugins`, skip copying that one (it should be the same)
 
 ```
 star_identifier.yml
 py_plugins:
+  | log.py
   | star_identifier_config.py
   | star_identifier_interface.py
   | star_identifier.py

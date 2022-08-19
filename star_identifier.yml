@@ -12,11 +12,11 @@ tasks:
     defaultArgs:
       mode: export_known
   - name: Identify Images
-    description: Compares images tagged with 'star identifier' (by default) to exports, and adds all possible matches to the images.
+    description: Compares images tagged with 'star identifier' (by default) to exported performers, and adds all possible matches to the images.
     defaultArgs:
       mode: identify_imgs
   - name: Identify Scene Screenshots
-    description: Compares scene screenshots tagged with 'star identifier' (by default) to exports, and adds all possible matches to the scenes.
+    description: Compares scene screenshots tagged with 'star identifier' (by default) to exported performers, and adds all possible matches to the scenes.
     defaultArgs:
       mode: identify_scene_screenshots
   # - name: Debug

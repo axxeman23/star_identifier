@@ -179,10 +179,10 @@ class IdentifierStashInterface:
 
 	# Scenes
 
-	def getSceneScreenshot(self, scene_filter=None):
-		return self.__getSceneScreenshot(scene_filter)
+	def getScenePaths(self, scene_filter=None):
+		return self.__getScenePaths(scene_filter)
 
-	def __getSceneScreenshot(self, scene_filter=None, page=1):
+	def __getScenePaths(self, scene_filter=None, page=1):
 		per_page = 1000
 		query = """
 		query($per_page: Int, $page: Int, $scene_filter: SceneFilterType) {
@@ -195,6 +195,7 @@ class IdentifierStashInterface:
 					id
 					paths {
 						screenshot
+						stream
 					}
 				}
 			}
@@ -212,7 +213,7 @@ class IdentifierStashInterface:
 		scenes = result.get('findScenes').get('scenes')
 
 		if len(scenes) == 1000:
-			next_page = self.__getSceneScreenshot(scene_filter, page + 1)
+			next_page = self.__getScenePaths(scene_filter, page + 1)
 			for scene in next_page:
 				scenes.append(scene)
 
