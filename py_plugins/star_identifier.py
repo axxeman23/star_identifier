@@ -307,9 +307,8 @@ def identify_scene_screenshots(client, ids, known_face_encodings):
     execution_args
     )
 
-<<<<<<< HEAD
   log.LogInfo("Scene screenshot identification complete!")
-=======
+
 def identify_scene_frames(client, ids, known_face_encodings):
   log.LogInfo(f"Getting scenes tagged with '{config.tag_name_identify}'...")
 
@@ -344,8 +343,6 @@ def identify_scene_frames(client, ids, known_face_encodings):
   # matching_performer_ids = np.unique(matching_performer_ids).tolist()
 
   log.LogDebug(f"Found performers in scene id {scene['id']} : {matching_performer_ids}")
-
->>>>>>> adding task
 
 if __name__ == "__main__":
   main()
