@@ -210,7 +210,7 @@ def get_recognized_ids(image_file, known_face_encodings, ids):
   recognized_ids = np.empty((0,0), int)
 
   for unknown_face in unknown_face_encodings:
-    results = face_recognition.compare_faces(known_face_encodings, unknown_face)
+    results = face_recognition.compare_faces(known_face_encodings, unknown_face, tolerance=config.tolerance)
 
     recognized_ids = np.append(recognized_ids, [ids[i] for i in range(len(results)) if results[i] == True])
 
@@ -228,6 +228,8 @@ def execute_identification_list(known_face_encodings, ids, args):
 
     for future in futures_list:
       log.LogProgress(count / args['total'])
+
+      debug_print(future)
 
       try:
         result = future.result()
