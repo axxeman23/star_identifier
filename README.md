@@ -9,6 +9,7 @@ Star Identifier uses [facial recognition](https://github.com/ageitgey/face_recog
 ## Requirements
 
 ### Python3
+__version: 3.10.x +__
 
 #### Installing Python
 
