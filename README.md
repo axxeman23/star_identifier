@@ -67,6 +67,10 @@ Star Identifier uses a tag to find images or scenes you would like identified. B
 
 Since the recognition is based on a single performer image, that image needs to have a pretty clear front-facing view of the performer's face. If face_recognition fails to find a performer's face, Star Identifier will tag that performer with `star identifier performer error` by default.
 
+### Star Identifier Settings
+
+You can adjust the tolerance for identification here. `0.6` is default and typical, but I've found `0.5` to work well. Lower is more strict.
+
 ## Running
 
 ### Export Performers
